@@ -3,6 +3,7 @@
 # dependencies
 node_modules/
 
+
 # Expo
 .expo/
 dist/
@@ -42,5 +43,4 @@ app-example
 /ios
 /android
 
-node_modules/
 cursor/
