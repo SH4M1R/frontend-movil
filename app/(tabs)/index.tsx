@@ -1,98 +1,111 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Link } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 export default function HomeScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
+    <LinearGradient
+      colors={['#667eea', '#764ba2']}
+      style={styles.container}
+    >
+      <Animated.View entering={FadeInUp.duration(1000).springify()} style={styles.logoContainer}>
         <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+          source={require('@/assets/images/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.duration(1000).springify()} style={styles.content}>
+        <ThemedText type="title" style={styles.title}>
+          Bienvenido a Fashion Store
         </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
+        <ThemedText type="default" style={styles.subtitle}>
+          Descubre las últimas tendencias en moda
+        </ThemedText>
+        
+        <Image
+          source={require('@/assets/images/fondo.jpg')}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        />
+        
+        <Link href="/(auth)/login" asChild>
+          <TouchableOpacity style={styles.button}>
+            <ThemedText type="defaultSemiBold" style={styles.buttonText}>
+              Empezar
+            </ThemedText>
+          </TouchableOpacity>
         </Link>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
+        <ThemedText type="default" style={styles.registerText}>
+          ¿No tienes una cuenta?{' '}
+          <Link href="/(auth)/register" style={styles.registerLink}>
+            Regístrate
+          </Link>
         </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      </Animated.View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    padding: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  logo: {
+    width: 120,
+    height: 120,
+  },
+  content: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  title: {
+    textAlign: 'center',
+    marginBottom: 10,
+    color: 'white',
+  },
+  subtitle: {
+    textAlign: 'center',
+    marginBottom: 30,
+    opacity: 0.7,
+    color: 'white',
+  },
+  backgroundImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 15,
+    marginBottom: 40,
+  },
+  button: {
+    backgroundColor: 'white',
+    paddingHorizontal: 40,
+    paddingVertical: 15,
+    borderRadius: 25,
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: '#667eea',
+    fontSize: 16,
+  },
+  registerText: {
+    marginTop: 10,
+    color: 'white',
+  },
+  registerLink: {
+    color: 'white',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });
