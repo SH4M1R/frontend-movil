@@ -1,27 +1,30 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
-export default function Header() {
+interface HeaderProps {
+  // puedes agregar props si quieres que el header sea dinámico
+}
+
+export default function Header(props: HeaderProps) {
   const { user } = useAuth(); // obtiene el usuario logueado
-  const cartCount = 0;
 
   return (
     <View style={styles.header}>
-      <Text style={styles.username}>
-        {user ? `Hola, ${user.username}` : 'Bienvenido'}
-      </Text>
+      {/* Logo y nombre de la empresa */}
+      <View style={styles.leftContainer}>
+        <Image
+          source={require('@/assets/img/logo.jpg')} // reemplaza con tu logo
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.companyName}>MODASTYLE</Text>
+      </View>
 
-      <TouchableOpacity
-        style={styles.cartContainer}
-        onPress={() => alert('Ir al carrito')}
-      >
-        <Ionicons name="cart-outline" size={28} color="#007AFF" />
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{cartCount}</Text>
-        </View>
-      </TouchableOpacity>
+      {/* Nombre del usuario */}
+      <Text style={styles.username}>
+        {user ? user.username : 'Bienvenido'}
+      </Text>
     </View>
   );
 }
@@ -42,29 +45,23 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  username: {
+  leftContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+  },
+  companyName: {
     fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
+  username: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
-  },
-  cartContainer: {
-    position: 'relative',
-  },
-  badge: {
-    position: 'absolute',
-    top: -5,
-    right: -10,
-    backgroundColor: '#007AFF',
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
   },
 });

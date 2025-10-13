@@ -39,15 +39,29 @@ export default function LoginScreen() {
     }, 1000);
   };
 
+  const handleGuestMode = () => {
+    // Redirige al home como invitado
+    router.replace('/views/home');
+  };
+
   return (
     <LinearGradient colors={['#f5f7fa', '#c3cfe2']} style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.content}
       >
+        {/* Botón Modo Invitado */}
+        <TouchableOpacity style={styles.guestButton} onPress={handleGuestMode}>
+          <Text style={styles.guestText}>Modo Invitado</Text>
+        </TouchableOpacity>
+
         {/* Logo */}
         <Animated.View entering={FadeInDown.duration(800)} style={styles.logoContainer}>
-          <Image source={require('@/assets/img/logo.jpg')} style={styles.logo} resizeMode="contain" />
+          <Image
+            source={require('@/assets/img/logo.jpg')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.appName}>YOURBRAND - MODASTYLE</Text>
         </Animated.View>
 
@@ -79,8 +93,8 @@ export default function LoginScreen() {
             />
           </View>
 
-          <TouchableOpacity 
-            style={[styles.button, loading && { opacity: 0.6 }]} 
+          <TouchableOpacity
+            style={[styles.button, loading && { opacity: 0.6 }]}
             onPress={handleLogin}
             disabled={loading}
           >
@@ -176,4 +190,19 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: '600',
   },
+  guestButton: {
+  position: 'absolute',
+  top: 40,
+  right: 25,
+  zIndex: 2,
+  paddingVertical: 6,
+  paddingHorizontal: 12,
+  backgroundColor: '#007AFF',
+  borderRadius: 8,
+},
+guestText: {
+  color: 'white',
+  fontWeight: '600',
+  fontSize: 14,
+},
 });

@@ -18,7 +18,6 @@ export default function Footer() {
   const buttons = [
     { key: 'home', label: 'Inicio', icon: 'home', route: 'views/home' },
     { key: 'productos', label: 'Productos', icon: 'pricetag', route: 'views/productos' },
-    { key: 'categorias', label: 'Categorías', icon: 'grid', route: 'views/categorias' },
     { key: 'perfil', label: 'Perfil', icon: 'person', route: 'views/perfil' },
   ];
 

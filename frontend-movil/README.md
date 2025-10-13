@@ -1,50 +1,42 @@
-# Welcome to your Expo app 👋
+YOURBRAND - MODASTYLE
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación móvil de ventas desarrollada con Expo, React Native y TypeScript. Permite registro, inicio de sesión, perfil de usuario y manejo de un carrito de compras.
+Características principales
+- Autenticación de usuarios
+Registro de nuevos usuarios.
+Inicio de sesión con email o nombre de usuario.
+Cierre de sesión.
+- Perfil de usuario
+Visualización del nombre y avatar del usuario.
+Opciones principales: Mi Perfil, Mis Pedidos, Mis Favoritos.
+Opciones secundarias: Mis Direcciones, Términos y Condiciones, Atención al Cliente, Libro de Reclamaciones.
+- Carrito de compras
+Ícono de carrito en el header con contador de productos.
+Indicador siempre visible, aunque no haya productos.
+- Diseño moderno y responsive
+Gradientes y animaciones con LinearGradient y react-native-reanimated.
+Componentes reutilizables para inputs y botones.
+- Persistencia simulada
+Usuarios almacenados en un archivo usuarios.ts para pruebas locales.
+Uso de Context API (AuthContext) para manejar estado global de autenticación.
+Tecnologías utilizadas
+- React Native
+- Expo
+- TypeScript
+- React Navigation
+- react-native-reanimated
+- Expo Router
 
-## Get started
+Instalación y ejecución
 
-1. Install dependencies
+1. Clonar el repositorio:
+git clone https://github.com/tu-usuario/yourbrand-modastyle.git
+cd frontend-movil
 
-   ```bash
-   npm install
-   ```
+2. Instalar dependencias:
+npm install
 
-2. Start the app
+3. Iniciar el proyecto con Expo:
+npx expo start
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+4. Abrir la aplicación en un emulador o dispositivo físico mediante QR Code.
