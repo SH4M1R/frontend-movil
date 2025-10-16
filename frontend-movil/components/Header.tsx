@@ -1,67 +1,67 @@
-import { useAuth } from '@/contexts/AuthContext';
+import { useStore } from '@/contexts/StoreContext';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-interface HeaderProps {
-  // puedes agregar props si quieres que el header sea dinámico
-}
+export default function Header() {
+  const {
+    setCartVisible,
+    setFilterVisible,
+    // 
+    // filters,
+    // setFilters,
+  } = useStore();
 
-export default function Header(props: HeaderProps) {
-  const { user } = useAuth(); // obtiene el usuario logueado
+ 
+  const cartCount = 2; 
 
   return (
-    <View style={styles.header}>
-      {/* Logo y nombre de la empresa */}
-      <View style={styles.leftContainer}>
-        <Image
-          source={require('@/assets/img/logo.jpg')} // reemplaza con tu logo
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.companyName}>MODASTYLE</Text>
+    <View className="bg-white shadow px-4 py-3">
+      {/* Logo + Icons */}
+      <View className="flex-row items-center justify-between">
+        <View className="flex-row items-center">
+          <Ionicons name="pricetag-outline" size={24} color="#1e3a8a" />
+          <Text className="ml-2 text-lg font-nunito font-black text-blue-950">
+            MODASTYLE
+          </Text>
+        </View>
+
+        <View className="flex-row items-center space-x-4">
+          {/* Botón filtro */}
+          <TouchableOpacity
+            onPress={() => setFilterVisible(true)}
+            accessibilityLabel="Abrir filtros"
+          >
+            <Ionicons name="filter-outline" size={24} color="#1e3a8a" />
+          </TouchableOpacity>
+
+          {/* Botón carrito */}
+          <TouchableOpacity
+            onPress={() => setCartVisible(true)}
+            accessibilityLabel="Abrir carrito"
+            className="relative"
+          >
+            <Ionicons name="cart-outline" size={24} color="#1e3a8a" />
+            {cartCount > 0 && (
+              <View className="absolute -top-2 -right-2 bg-yellow-400 rounded-full w-5 h-5 items-center justify-center">
+                <Text className="text-[10px] font-bold">{cartCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Nombre del usuario */}
-      <Text style={styles.username}>
-        {user ? user.username : 'Bienvenido'}
-      </Text>
+      {/* Search bar */}
+      <View className="bg-gray-200 flex-row items-center mt-3 px-3 rounded-2xl">
+        <Ionicons name="search" size={20} color="#333" />
+        <TextInput
+          placeholder="Buscar productos..."
+          className="ml-2 flex-1 text-gray-700 py-2"
+          // para agregar filtros
+          // value={filters?.searchText || ''}
+          // onChangeText={(t) => setFilters({ searchText: t })}
+        />
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  header: {
-    height: 60,
-    backgroundColor: '#fff',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  leftContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logo: {
-    width: 40,
-    height: 40,
-    marginRight: 10,
-  },
-  companyName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  username: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-});
