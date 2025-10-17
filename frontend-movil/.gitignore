@@ -1,43 +1,47 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# Ignorar todo por defecto
+/*
 
+# Pero no ignores la segunda carpeta y su contenido
+!frontend-movil/
+!frontend-movil/**
+
+# Ahora dentro de frontend-movil/frontend-movil puedes seguir usando tu .gitignore actual:
 # dependencies
-node_modules/
+frontend-movil/node_modules/
 
 # Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
+frontend-movil/.expo/
+frontend-movil/dist/
+frontend-movil/web-build/
+frontend-movil/expo-env.d.ts
 
 # Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
+frontend-movil/.kotlin/
+frontend-movil/*.orig.*
+frontend-movil/*.jks
+frontend-movil/*.p8
+frontend-movil/*.p12
+frontend-movil/*.key
+frontend-movil/*.mobileprovision
 
 # Metro
-.metro-health-check*
+frontend-movil/.metro-health-check*
 
 # debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
+frontend-movil/npm-debug.*
+frontend-movil/yarn-debug.*
+frontend-movil/yarn-error.*
 
 # macOS
-.DS_Store
-*.pem
+frontend-movil/.DS_Store
+frontend-movil/*.pem
 
 # local env files
-.env*.local
+frontend-movil/.env*.local
 
 # typescript
-*.tsbuildinfo
-
-app-example
+frontend-movil/*.tsbuildinfo
 
 # generated native folders
-/ios
-/android
+frontend-movil/ios
+frontend-movil/android
