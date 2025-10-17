@@ -1,18 +1,13 @@
-import CartModal from '@/components/CartModal';
-import FilterModal from '@/components/FilterModal';
-import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
 import { useStore } from '@/contexts/StoreContext';
 import { products } from '@/data/productos';
-import React, { useState } from 'react';
+import React from 'react';
 import { Dimensions, FlatList, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const itemWidth = (width - 40) / 2;
 
 export default function ProductsScreen() {
-  const [filterVisible, setFilterVisible] = useState(false);
-  const [cartVisible, setCartVisible] = useState(false);
   const { filters } = useStore();
 
   const filterByPrice = (product: any) => {
@@ -30,7 +25,6 @@ export default function ProductsScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      <Header openFilter={() => setFilterVisible(true)} openCart={() => setCartVisible(true)} />
 
       <FlatList
         data={filteredProducts}
@@ -40,9 +34,6 @@ export default function ProductsScreen() {
         contentContainerStyle={{ paddingHorizontal: 10, paddingVertical: 20 }}
         columnWrapperStyle={{ justifyContent: 'space-between' }}
       />
-
-      <FilterModal visible={filterVisible} close={() => setFilterVisible(false)} />
-      <CartModal visible={cartVisible} close={() => setCartVisible(false)} />
     </View>
   );
 }

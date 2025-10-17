@@ -1,4 +1,5 @@
-import React, { createContext, ReactNode, useContext, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 type Product = {
   id: string;
@@ -26,7 +27,6 @@ type StoreContextType = {
   setFilters: (f: Partial<Filters>) => void;
   clearCart: () => void;
 
-  // 👇 NUEVO: para manejar visibilidad global de modales
   cartVisible: boolean;
   setCartVisible: (v: boolean) => void;
   filterVisible: boolean;
@@ -42,19 +42,40 @@ export const useStore = () => {
 };
 
 export const StoreProvider = ({ children }: { children: ReactNode }) => {
-  // 🛒 Estado del carrito
   const [cart, setCart] = useState<CartItem[]>([]);
-
-  // 🎯 Estado de filtros
   const [filters, setFiltersState] = useState<Filters>({
     category: 'Todos',
     priceRange: 'Todos',
     searchText: '',
   });
 
-  // 🪟 NUEVO: estado de visibilidad de modales
   const [cartVisible, setCartVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
+
+  // 🔹 Cargar carrito desde AsyncStorage al iniciar
+  useEffect(() => {
+    const loadCart = async () => {
+      try {
+        const json = await AsyncStorage.getItem('cart');
+        if (json) setCart(JSON.parse(json));
+      } catch (error) {
+        console.log('Error cargando carrito:', error);
+      }
+    };
+    loadCart();
+  }, []);
+
+  // 🔹 Guardar carrito en AsyncStorage cada vez que cambie
+  useEffect(() => {
+    const saveCart = async () => {
+      try {
+        await AsyncStorage.setItem('cart', JSON.stringify(cart));
+      } catch (error) {
+        console.log('Error guardando carrito:', error);
+      }
+    };
+    saveCart();
+  }, [cart]);
 
   // === LÓGICA DEL CARRITO ===
   const addToCart = (product: Product) => {
@@ -98,15 +119,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     filters,
     setFilters,
     clearCart,
-
-    // 👇 visibilidad global
     cartVisible,
     setCartVisible,
     filterVisible,
     setFilterVisible,
   };
 
-  return (
-    <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
-  );
+  return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 };

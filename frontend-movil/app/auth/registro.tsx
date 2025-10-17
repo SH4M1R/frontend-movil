@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -54,35 +53,47 @@ export default function RegisterScreen() {
   };
 
   return (
-    <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
-      <KeyboardAvoidingView 
+    <LinearGradient colors={['#667eea', '#764ba2']} className="flex-1">
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoid}
+        className="flex-1"
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={{ padding: 20, flexGrow: 1, justifyContent: 'center' }}>
           
           {/* Botón de volver */}
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            className="absolute top-10 left-5 z-10"
+          >
             <Ionicons name="arrow-back" size={26} color="white" />
           </TouchableOpacity>
 
           {/* Logo */}
-          <Animated.View entering={FadeInUp.duration(900).springify()} style={styles.logoContainer}>
+          <Animated.View 
+            entering={FadeInUp.duration(900).springify()} 
+            className="items-center mb-8"
+          >
             <Image
-              source={require('@/assets/img/logo.jpg')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
+                        source={require('@/assets/img/logo.jpg')}
+                        className="w-28 h-28 rounded-2xl"
+                        resizeMode="contain"
+                      />
           </Animated.View>
 
           {/* Formulario */}
-          <Animated.View entering={FadeInDown.duration(900).springify()} style={styles.formContainer}>
-            <Text style={styles.title}>Crear Cuenta</Text>
+          <Animated.View 
+            entering={FadeInDown.duration(900).springify()} 
+            className="bg-white rounded-3xl p-6 shadow-lg"
+          >
+            <Text className="text-center mb-6 text-2xl font-semibold text-gray-800">
+              Crear Cuenta
+            </Text>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
+            {/* Nombre */}
+            <View className="flex-row items-center border border-gray-300 rounded-lg mb-4 px-4 h-12">
+              <Ionicons name="person-outline" size={20} color="#666" className="mr-2" />
               <TextInput
-                style={styles.input}
+                className="flex-1 text-base text-gray-800"
                 placeholder="Nombre completo"
                 placeholderTextColor="#666"
                 value={formData.name}
@@ -91,10 +102,11 @@ export default function RegisterScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+            {/* Correo */}
+            <View className="flex-row items-center border border-gray-300 rounded-lg mb-4 px-4 h-12">
+              <Ionicons name="mail-outline" size={20} color="#666" />
               <TextInput
-                style={styles.input}
+                className="flex-1 text-base text-gray-800 ml-2"
                 placeholder="Correo electrónico"
                 placeholderTextColor="#666"
                 value={formData.email}
@@ -105,10 +117,11 @@ export default function RegisterScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+            {/* Contraseña */}
+            <View className="flex-row items-center border border-gray-300 rounded-lg mb-4 px-4 h-12">
+              <Ionicons name="lock-closed-outline" size={20} color="#666" />
               <TextInput
-                style={styles.input}
+                className="flex-1 text-base text-gray-800 ml-2"
                 placeholder="Contraseña"
                 placeholderTextColor="#666"
                 secureTextEntry
@@ -118,10 +131,11 @@ export default function RegisterScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+            {/* Confirmar contraseña */}
+            <View className="flex-row items-center border border-gray-300 rounded-lg mb-6 px-4 h-12">
+              <Ionicons name="lock-closed-outline" size={20} color="#666" />
               <TextInput
-                style={styles.input}
+                className="flex-1 text-base text-gray-800 ml-2"
                 placeholder="Confirmar contraseña"
                 placeholderTextColor="#666"
                 secureTextEntry
@@ -133,30 +147,32 @@ export default function RegisterScreen() {
 
             {/* Botón registrar */}
             <TouchableOpacity 
-              style={[styles.registerButton, loading && styles.disabledButton]} 
+              className={`bg-indigo-500 py-4 rounded-lg items-center ${loading ? 'opacity-60' : ''}`}
               onPress={handleRegister}
               disabled={loading}
             >
-              <Text style={styles.registerButtonText}>
+              <Text className="text-white text-base font-semibold">
                 {loading ? 'Creando cuenta...' : 'Registrar'}
               </Text>
             </TouchableOpacity>
 
             {/* Enlace a login */}
-            <View style={styles.bottomTextContainer}>
+            <View className="mt-6 items-center">
               <TouchableOpacity onPress={() => router.push('/auth/login')}>
-                <Text style={styles.loginText}>
-                  ¿Ya tienes una cuenta? <Text style={styles.loginLink}>Inicia sesión</Text>
+                <Text className="text-gray-600">
+                  ¿Ya tienes una cuenta? <Text className="text-indigo-500 font-bold">Inicia sesión</Text>
                 </Text>
               </TouchableOpacity>
             </View>
 
             {/* Opción de olvidaste tu contraseña */}
             <TouchableOpacity 
-              style={styles.forgotPassword}
+              className="mt-4 items-center"
               onPress={() => Alert.alert('Próximamente', 'Funcionalidad aún no disponible')}
             >
-              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+              <Text className="text-indigo-500 text-sm font-medium">
+                ¿Olvidaste tu contraseña?
+              </Text>
             </TouchableOpacity>
           </Animated.View>
         </ScrollView>
@@ -164,80 +180,3 @@ export default function RegisterScreen() {
     </LinearGradient>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  keyboardAvoid: { flex: 1 },
-  scrollContent: {
-    padding: 20,
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    zIndex: 1,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  logo: {
-    width: 110,
-    height: 110,
-  },
-  formContainer: {
-    backgroundColor: 'white',
-    borderRadius: 25,
-    padding: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 6,
-  },
-  title: {
-    textAlign: 'center',
-    marginBottom: 25,
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#333',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 10,
-    marginBottom: 15,
-    paddingHorizontal: 15,
-    height: 50,
-  },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 16, color: '#333' },
-  registerButton: {
-    backgroundColor: '#667eea',
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  disabledButton: { opacity: 0.6 },
-  registerButtonText: { color: 'white', fontSize: 16, fontWeight: '600' },
-  bottomTextContainer: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  loginText: { color: '#666' },
-  loginLink: { color: '#667eea', fontWeight: 'bold' },
-  forgotPassword: {
-    marginTop: 15,
-    alignItems: 'center',
-  },
-  forgotPasswordText: {
-    color: '#667eea',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-});

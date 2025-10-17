@@ -1,4 +1,5 @@
 import Footer from '@/components/Footer';
+import Header from '@/components/Header';
 import { Slot, usePathname } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
@@ -9,16 +10,15 @@ export default function MainLayout() {
 
   return (
     <View className="flex-1 bg-[#f9f9f9]">
-      {showHeader && (
-        <View className="w-full pt-10">
-          
-        </View>
-      )}
+      {/* Header global */}
+      {showHeader && <Header />}
 
+      {/* Contenedor principal de cada pantalla */}
       <View className="flex-1">
         <Slot />
       </View>
 
+      {/* Footer global */}
       <Footer />
     </View>
   );
