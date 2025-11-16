@@ -56,7 +56,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <LinearGradient colors={["#667eea", "#764ba2"]} className="flex-1">
+    <LinearGradient colors={["#764ba2", "#667eea"]} className="flex-1">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -66,7 +66,7 @@ export default function LoginScreen() {
         >
           {/* Botón Modo Invitado */}
           <TouchableOpacity
-            className="absolute top-10 right-6 z-10 bg-blue-500 rounded-md py-1.5 px-3"
+            className="absolute top-10 right-6 z-10 bg-indigo-700 rounded-md py-1.5 px-3"
             onPress={handleGuestMode}
           >
             <Text className="text-white font-semibold text-sm">Modo Invitado</Text>

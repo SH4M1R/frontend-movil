@@ -33,13 +33,13 @@ export default function Footer() {
     <View className="h-16 flex-row justify-around items-center border-t border-gray-300 bg-white">
       {buttons.map((btn) => {
         const isActive = active === btn.key;
-        const color = isActive ? '#007AFF' : '#999';
+        const color = isActive ? '#4e2fb9' : '#6146c1';
 
         return (
           <TouchableOpacity
             key={btn.key}
             className={`flex items-center justify-center px-2 py-1 rounded-xl ${
-              isActive ? 'bg-blue-100' : ''
+              isActive ? 'bg-indigo-200' : ''
             }`}
             onPress={() => router.push(btn.route as any)}
           >

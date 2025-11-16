@@ -1,20 +1,52 @@
-import { useStore } from '@/contexts/StoreContext';
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Producto, useStore } from "@/contexts/StoreContext";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
-export default function ProductCard({ item, itemWidth }: { item: any; itemWidth: number; }) {
+export default function ProductCard({ item, onPress }: { item: Producto; onPress: () => void }) {
   const { addToCart } = useStore();
 
   return (
-    <View style={{ width: itemWidth }} className="bg-white rounded-xl p-3 shadow-md m-2">
-      <Image source={item.image} className="w-full h-32 rounded-lg mb-2 bg-gray-200" resizeMode="cover" />
-      <Text className="text-base mb-1">{item.name}</Text>
-      <Text className="text-blue-500 font-bold text-lg">S/ {item.price}</Text>
+    <TouchableOpacity
+      onPress={onPress}
+      className="bg-white rounded-xl p-3 shadow flex"
+      style={{
+        width: "48%",
+        height: 200,
+      }}
+    >
+      <View
+        className="rounded-lg bg-gray-100 mb-2"
+        style={{
+          width: "100%",
+          height: 110,
+          overflow: "hidden",
+        }}
+      >
+        <Image
+          source={{ uri: item.imagen }}
+          resizeMode="cover"
+          style={{
+            width: "100%",
+            height: "100%",
+          }}
+        />
+      </View>
 
-      <TouchableOpacity className="absolute bottom-4 right-4" onPress={() => addToCart(item)}>
-        <Ionicons name="add-circle" size={28} color="#007AFF" />
+      <Text className="font-semibold text-gray-800" numberOfLines={2}>
+        {item.producto}
+      </Text>
+
+      <Text className="text-indigo-600 font-bold mt-1">
+        S/ {item.precioVenta.toFixed(2)}
+      </Text>
+
+      <TouchableOpacity
+        className="absolute bottom-4 right-4"
+        onPress={() => addToCart(item)}
+      >
+        <Ionicons name="add-circle" size={30} color="#4F46E5" />
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 }

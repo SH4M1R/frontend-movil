@@ -25,7 +25,6 @@ export default function PromoCarousel({
 }: Props) {
     const flatRef = useRef<FlatList>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
-    /*const cardWidth = Math.round(width * cardWithRatio);*/
     const cardWidth = width * 0.95; 
 
 
@@ -62,9 +61,9 @@ export default function PromoCarousel({
             {item.image && (
                 <Image source={item.image} className="w-full h-40 rounded-lg mb-2" resizeMode="cover" />
             )}
-            <Text className="text-blue-500 text-lg font-bold text-center">{item.title}</Text>
+            <Text className="text-indigo-500 text-lg font-bold text-center">{item.title}</Text>
             {item.description ? (
-                <Text className="text-gray-600 text-sm text-center mt-1">{item.description}</Text>
+                <Text className="text-indigo-600 text-sm text-center mt-1">{item.description}</Text>
             ) : null}
         </Animated.View>
     );
@@ -72,7 +71,7 @@ export default function PromoCarousel({
     const renderDot = (index: number) => (
         <View
             key={`dot-${index}`}
-            className={`w-2.5 h-2.5 rounded-full mx-1 ${index === currentIndex ? 'bg-blue-500' : 'bg-gray-300'}`}
+            className={`w-2.5 h-2.5 rounded-full mx-1 ${index === currentIndex ? 'bg-indigo-500' : 'bg-gray-300'}`}
         />
     );
 

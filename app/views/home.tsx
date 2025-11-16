@@ -1,5 +1,4 @@
 import CategoriasCarousel from '@/components/CategoriasCarousel';
-import FilterModal from '@/components/FilterModal';
 import ProductosDestacados from '@/components/ProductosDestacados';
 import PromoCarousel from '@/components/PromoCarousel';
 import { categories, productItems, promoItems } from '@/data/homeData';
@@ -11,7 +10,6 @@ const { width } = Dimensions.get('window');
 export default function HomeScreen() {
   return (
     <View className="flex-1 bg-slate-100">
-      <FilterModal />
       <ScrollView
         className="pt-4"
         contentContainerStyle={{ paddingBottom: 200 }}

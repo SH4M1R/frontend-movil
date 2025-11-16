@@ -28,7 +28,7 @@ export default function ProductCarousel() {
       {/* Header */}
       <View className="flex-row justify-between px-4 mb-2">
         <Text className="text-lg font-bold text-black">Promociones</Text>
-        <Text className="text-blue-500">Ver todo</Text>
+        <Text className="text-indigo-500">Ver todo</Text>
       </View>
 
       {/* Carrusel */}
@@ -40,7 +40,7 @@ export default function ProductCarousel() {
         showsHorizontalScrollIndicator={false}
         keyExtractor={(_, i) => i.toString()}
         renderItem={({ item }) => (
-          <View className="mx-2 rounded-xl overflow-hidden" style={{ width: width * 0.9, backgroundColor: '#f5f5dc' }}>
+          <View className="mx-2 rounded-xl overflow-hidden" style={{ width: width * 0.9, backgroundColor: 'indigo' }}>
             <Image source={item.image} className="w-full h-48" resizeMode="cover" />
             <View className="p-4">
               <Text className="text-white text-lg font-bold">{item.title}</Text>

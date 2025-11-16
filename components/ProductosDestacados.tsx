@@ -27,13 +27,13 @@ export default function ProductosDestacados({ items, title = 'Productos' }: Prop
           resizeMode="cover"
         />
       )}
-      <Text className="text-base font-bold text-blue-600 text-center">{item.title}</Text>
+      <Text className="text-base font-bold text-indigo-600 text-center">{item.title}</Text>
       {item.description && (
         <Text className="text-sm text-gray-600 my-2 text-center">
           {item.description}
         </Text>
       )}
-      <TouchableOpacity className="my-2 bg-blue-600 px-4 py-2  rounded-lg">
+      <TouchableOpacity className="my-2 bg-indigo-600 px-4 py-2  rounded-lg">
         <Text className="text-white font-semibold ">Comprar</Text>
       </TouchableOpacity>
     </Animated.View>
@@ -62,7 +62,7 @@ export default function ProductosDestacados({ items, title = 'Productos' }: Prop
           <View
             key={index}
             className={`w-2 h-2 rounded-full mx-1 ${
-              index === currentIndex ? 'bg-blue-600' : 'bg-gray-300'
+              index === currentIndex ? 'bg-indigo-600' : 'bg-gray-300'
             }`}
           />
         ))}

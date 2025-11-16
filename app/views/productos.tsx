@@ -1,65 +1,71 @@
-import FilterModal from '@/components/FilterModal';
-import ProductCard from '@/components/ProductCard';
-import { useStore } from '@/contexts/StoreContext';
-import { products } from '@/data/productos';
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { Dimensions, FlatList, TextInput, TouchableOpacity, View } from 'react-native';
+import ModalFiltro from "@/components/ModalFiltro";
+import ProductCard from "@/components/ProductCard";
+import { useStore } from "@/contexts/StoreContext";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useMemo } from "react";
+import { FlatList, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-const { width } = Dimensions.get('window');
-const itemWidth = (width - 40) / 2;
+export default function Productos() {
+  const { productos, filters, setFilters, setFiltroVisible } = useStore();
 
-export default function ProductsScreen() {
-  const { filters, setFilters, setFilterVisible } = useStore();
+  const productosFiltrados = useMemo(() => {
+    return productos.filter(p => {
+      const coincideCategoria =
+        filters.categoria ? p.categoria.idCategoria === filters.categoria : true;
 
-  const filterByPrice = (product: any) => {
-    if (filters.priceRange === 'Todos') return true;
-    if (filters.priceRange === 'Menos de S/50') return product.price < 50;
-    if (filters.priceRange === 'S/50 - S/100') return product.price >= 50 && product.price <= 100;
-    if (filters.priceRange === 'Más de S/100') return product.price > 100;
-    return true;
-  };
+      const coincideTexto = p.producto
+        .toLowerCase()
+        .includes(filters.searchText.toLowerCase());
 
-  const filteredProducts = products
-    .filter(p => filters.category === 'Todos' || p.category === filters.category)
-    .filter(filterByPrice)
-    .filter(p => p.name.toLowerCase().includes(filters.searchText.toLowerCase()));
+      return coincideCategoria && coincideTexto;
+    });
+  }, [productos, filters]);
 
   return (
-    <View className="flex-1 bg-white">
-      {/* 🔹 Barra de búsqueda y botón de filtro */}
-      <View className="flex-row items-center justify-between px-4 pt-4 mb-2">
-        <View className="flex-row flex-1 items-center bg-gray-100 rounded-md px-3 mr-2">
-          <Ionicons name="search-outline" size={20} color="gray" />
-          <TextInput
-            placeholder="Buscar producto..."
-            value={filters.searchText}
-            onChangeText={(text) => setFilters({ ...filters, searchText: text })}
-            className="flex-1 ml-2 text-base text-gray-800"
-            placeholderTextColor="#999"
-          />
-        </View>
+    <View className="flex-1 bg-gray-100 px-4 pt-5">
+      <Text className="text-2xl font-bold text-indigo-700 mb-2">
+        Catálogo de Productos
+      </Text>
 
-        <TouchableOpacity
-          onPress={() => setFilterVisible(true)}
-          className="bg-blue-600 p-3 rounded-md"
-        >
-          <Ionicons name="filter-outline" size={22} color="white" />
+      {/* SEARCH */}
+      <View className="flex-row items-center bg-white p-3 rounded-2xl shadow mb-4">
+        <Ionicons name="search" size={20} color="#4F46E5" />
+        <TextInput
+          placeholder="Buscar producto..."
+          className="ml-2 flex-1 text-gray-700"
+          value={filters.searchText}
+          onChangeText={(text) => setFilters({ searchText: text })}
+        />
+
+        {/* BOTÓN FILTRO */}
+        <TouchableOpacity onPress={() => setFiltroVisible(true)}>
+          <Ionicons name="options" size={26} color="#4F46E5" />
         </TouchableOpacity>
       </View>
 
-      {/* 🔹 Modal de filtros */}
-      <FilterModal />
-
-      {/* 🔹 Lista de productos */}
+      {/* LISTA DE PRODUCTOS */}
       <FlatList
-        data={filteredProducts}
-        renderItem={({ item }) => <ProductCard item={item} itemWidth={itemWidth} />}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={{ paddingHorizontal: 10, paddingVertical: 10 }}
-        columnWrapperStyle={{ justifyContent: 'space-between' }}
+        data={productosFiltrados}
+        keyExtractor={(item) => item.idProducto.toString()}
+        numColumns={2}        
+        columnWrapperStyle={{ gap: 12 }} 
+        contentContainerStyle={{ gap: 12 }}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <ProductCard
+            item={item}
+            onPress={() => console.log("VER DETALLE", item.producto)}
+          />
+        )}
+        ListEmptyComponent={
+          <Text className="text-center text-gray-600 mt-10">
+            No se encontraron productos.
+          </Text>
+        }
       />
+
+      {/* MODAL */}
+      <ModalFiltro />
     </View>
   );
 }
