@@ -37,7 +37,7 @@ export default function RegisterScreen() {
     setLoading(true);
 
     try {
-      // 🧩 JSON que enviamos al backend
+      // JSON que enviamos al backend
       const nuevoUsuario = {
         nombre,
         correo,
@@ -45,8 +45,7 @@ export default function RegisterScreen() {
         contrasena,
       };
 
-      // 🚀 Envío al backend Spring Boot (puerto 8099)
-      const response = await fetch("http://10.0.2.2:8099/api/usuarios/registro", {
+      const response = await fetch("http://10.0.2.2:8500/api/usuarios/registro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(nuevoUsuario),

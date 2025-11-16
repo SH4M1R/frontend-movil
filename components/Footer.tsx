@@ -1,16 +1,16 @@
-import { useStore } from '@/contexts/StoreContext'; // <- Importa el store
+import { useStore } from '@/contexts/StoreContext';
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Footer() {
   const router = useRouter();
   const pathname = usePathname();
   const [active, setActive] = useState('');
-  const { cart } = useStore(); // <- Obtenemos el carrito
+  const { cart } = useStore();
 
-  // Calculamos el total de items en el carrito
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   useEffect(() => {
@@ -29,6 +29,7 @@ export default function Footer() {
   ];
 
   return (
+    <SafeAreaView>
     <View className="h-16 flex-row justify-around items-center border-t border-gray-300 bg-white">
       {buttons.map((btn) => {
         const isActive = active === btn.key;
@@ -40,7 +41,7 @@ export default function Footer() {
             className={`flex items-center justify-center px-2 py-1 rounded-xl ${
               isActive ? 'bg-blue-100' : ''
             }`}
-            onPress={() => router.push(btn.route)}
+            onPress={() => router.push(btn.route as any)}
           >
             <View className="relative">
               <Ionicons name={btn.icon as any} size={24} color={color} />
@@ -60,5 +61,6 @@ export default function Footer() {
         );
       })}
     </View>
+    </SafeAreaView>
   );
 }

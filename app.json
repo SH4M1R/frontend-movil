@@ -7,6 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "frontendmovil",
     "userInterfaceStyle": "automatic",
+    "developmentClient": { "port": 8000 },
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true

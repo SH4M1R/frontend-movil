@@ -1,21 +1,23 @@
-import usuarios from '@/data/usuarios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 type User = {
-  username: string;
-  email: string;
+  nombre: string;
+  correo: string;
+  token: string;
 };
 
 type AuthContextType = {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  setUser: (user: User | null) => void; // Para modo invitado o actualizaciones manuales
+  login: (correo: string, contrasena: string) => Promise<boolean>;
+  register: (nombre: string, correo: string, contrasena: string) => Promise<boolean>;
   logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  setUser: () => {},
   login: async () => false,
   register: async () => false,
   logout: async () => {},
@@ -24,7 +26,6 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  // Cargar usuario desde AsyncStorage al iniciar
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -37,28 +38,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadUser();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const foundUser = usuarios.find(
-      (u) => u.correo === email && u.contraseña === password
-    );
-    if (foundUser) {
-      const userData = { username: foundUser.username, email: foundUser.correo };
+  const login = async (correo: string, contrasena: string) => {
+    try {
+      const response = await fetch('http://10.0.2.2:8500/api/usuarios/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correo, contrasena }),
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json(); // { nombre, correo, token }
+
+      const userData: User = {
+        nombre: data.nombre,
+        correo: data.correo,
+        token: data.token,
+      };
+
       setUser(userData);
       await AsyncStorage.setItem('user', JSON.stringify(userData));
+
       return true;
+    } catch (e) {
+      console.log('Error login:', e);
+      return false;
     }
-    return false;
   };
 
-  const register = async (name: string, email: string, password: string) => {
-    const exists = usuarios.find((u) => u.correo === email);
-    if (exists) return false;
+  const register = async (nombre: string, correo: string, contrasena: string) => {
+    try {
+      const response = await fetch('http://10.0.2.2:8500/api/usuarios/registro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, correo, contrasena }),
+      });
 
-    usuarios.push({ username: name, correo: email, contraseña: password });
-    const userData = { username: name, email };
-    setUser(userData);
-    await AsyncStorage.setItem('user', JSON.stringify(userData));
-    return true;
+      return response.ok;
+    } catch (e) {
+      console.log('Error registro:', e);
+      return false;
+    }
   };
 
   const logout = async () => {
@@ -67,10 +87,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
+// Hook para usar AuthContext fácilmente
 export const useAuth = () => useContext(AuthContext);
