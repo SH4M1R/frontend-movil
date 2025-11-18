@@ -130,6 +130,15 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
 
+            <TouchableOpacity 
+                onPress={() => router.push("/auth/recuperar")}
+                className="mt-3 items-center"
+            >
+                <Text className="text-indigo-500 font-semibold text-sm">
+                    ¿Olvidaste tu contraseña?
+                </Text>
+            </TouchableOpacity>
+
             {/* Enlace a Registro */}
             <View className="mt-4 items-center">
               <TouchableOpacity onPress={() => router.push("/auth/registro")}>
