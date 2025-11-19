@@ -23,7 +23,6 @@ export default function LoginScreen() {
   const [contrasena, setContrasena] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Función para login normal
   const handleLogin = async () => {
     if (!correo || !contrasena) {
       Alert.alert("Error", "Por favor completa todos los campos");
@@ -42,7 +41,6 @@ export default function LoginScreen() {
     }
   };
 
-  // Función para Modo Invitado
   const handleGuestMode = async () => {
     const guestUser = {
       nombre: "Invitado",
@@ -130,6 +128,7 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
 
+            {/* Olvidaste tu contraseña */}
             <TouchableOpacity 
                 onPress={() => router.push("/auth/recuperar")}
                 className="mt-3 items-center"
@@ -140,14 +139,13 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             {/* Enlace a Registro */}
-            <View className="mt-4 items-center">
-              <TouchableOpacity onPress={() => router.push("/auth/registro")}>
-                <Text className="text-gray-600">
-                  ¿No tienes cuenta?{" "}
-                  <Text className="text-indigo-500 font-bold">Regístrate</Text>
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity 
+              onPress={() => router.push("/auth/registro")} 
+              className="flex-row justify-center mt-4"
+            >
+              <Text className="text-gray-600">¿No tienes cuenta? </Text>
+              <Text className="text-indigo-500 font-bold">Regístrate</Text>
+            </TouchableOpacity>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>

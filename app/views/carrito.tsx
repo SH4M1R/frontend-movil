@@ -1,103 +1,70 @@
-import { useStore } from '@/contexts/StoreContext';
-import { useRouter } from 'expo-router';
-import React from 'react';
-import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { MinusIcon, PlusIcon, TrashIcon } from 'react-native-heroicons/outline';
+import { CartItem, useStore } from "@/contexts/StoreContext";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React from "react";
+import { Alert, FlatList, Image, Text, TouchableOpacity, View } from "react-native";
 
-export default function CarritoView() {
-  const { cart, updateQuantity, removeFromCart, getTotal, clearCart } = useStore();
+export default function Carrito() {
+  const { cart, removeFromCart, updateQuantity, getTotal } = useStore();
   const router = useRouter();
 
-  return (
-    <View className="flex-1 bg-slate-100 p-4">
+  const handleCheckout = () => {
+    if (cart.length === 0) {
+      Alert.alert("Carrito vacío", "Agrega productos antes de continuar.");
+      return;
+    }
+    router.push("/views/metodopago");
+  };
 
-      <Text className="text-2xl font-bold text-slate-700 mb-4">Tu Carrito</Text>
-
-      {cart.length === 0 ? (
-        <Text className="text-center text-slate-500 mt-10">
-          Tu carrito está vacío 🛒
-        </Text>
+  const renderItem = ({ item }: { item: CartItem }) => (
+    <View className="flex-row bg-white rounded-xl p-3 mb-3 shadow items-center">
+      {item.imagen ? (
+        <Image source={{ uri: item.imagen }} resizeMode="cover" className="w-20 h-20 rounded-lg mr-3" />
       ) : (
-        <>
-          <ScrollView className="space-y-4 mb-4">
-            {cart.map((item) => (
-              <View
-                key={item.idProducto}
-                className="bg-white p-3 rounded-xl shadow-sm flex-row items-center"
-              >
-                {/* Imagen */}
-                <Image
-                  source={{ uri: item.imagen }}
-                  className="w-20 h-20 rounded-lg mr-3 bg-slate-200"
-                />
+        <View className="w-20 h-20 rounded-lg mr-3 bg-gray-200 flex items-center justify-center">
+          <Ionicons name="image-outline" size={24} color="gray" />
+        </View>
+      )}
+      <View className="flex-1">
+        <Text className="font-semibold text-gray-800 text-lg">{item.producto}</Text>
+        <Text className="text-indigo-600 font-bold mt-1">S/ {item.precioVenta.toFixed(2)}</Text>
+        <View className="flex-row items-center mt-2">
+          <TouchableOpacity onPress={() => updateQuantity(item.idProducto, -1)} className="p-1 bg-indigo-100 rounded">
+            <Ionicons name="remove" size={20} color="#4F46E5" />
+          </TouchableOpacity>
+          <Text className="mx-3 text-gray-800 font-semibold">{item.quantity}</Text>
+          <TouchableOpacity onPress={() => updateQuantity(item.idProducto, 1)} className="p-1 bg-indigo-100 rounded">
+            <Ionicons name="add" size={20} color="#4F46E5" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <TouchableOpacity onPress={() => removeFromCart(item.idProducto)}>
+        <Ionicons name="trash" size={28} color="red" />
+      </TouchableOpacity>
+    </View>
+  );
 
-                {/* Info */}
-                <View className="flex-1">
-                  <Text className="text-base font-semibold text-slate-700">
-                    {item.producto}
-                  </Text>
-
-                  <Text className="text-sm text-slate-500">
-                    S/ {item.precioVenta.toFixed(2)}
-                  </Text>
-
-                  {/* Controles de cantidad */}
-                  <View className="flex-row items-center mt-2">
-                    <TouchableOpacity
-                      className="p-1"
-                      onPress={() => updateQuantity(item.idProducto, -1)}
-                    >
-                      <MinusIcon size={22} color="#64748b" />
-                    </TouchableOpacity>
-
-                    <Text className="mx-3 font-semibold text-slate-700">
-                      {item.quantity}
-                    </Text>
-
-                    <TouchableOpacity
-                      className="p-1"
-                      onPress={() => updateQuantity(item.idProducto, +1)}
-                    >
-                      <PlusIcon size={22} color="#64748b" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Botón eliminar */}
-                <TouchableOpacity
-                  className="p-2"
-                  onPress={() => removeFromCart(item.idProducto)}
-                >
-                  <TrashIcon size={26} color="#ef4444" />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-
-          {/* Total y botones */}
-          <View className="bg-white p-4 rounded-xl shadow-md">
-            <View className="flex-row justify-between mb-3">
-              <Text className="text-lg font-semibold text-slate-700">Total:</Text>
-              <Text className="text-lg font-bold text-indigo-600">S/ {getTotal()}</Text>
-            </View>
-
-            <TouchableOpacity
-              onPress={() => router.push('/views/checkout')}
-              className="bg-indigo-600 py-3 rounded-xl shadow text-center"
-            >
-              <Text className="text-white font-semibold text-lg">Proceder al Pago</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={clearCart}
-              className="mt-3 py-3 rounded-xl bg-slate-200"
-            >
-              <Text className="text-slate-700 text-center font-semibold">
-                Vaciar Carrito
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </>
+  return (
+    <View className="flex-1 bg-gray-100 px-4 pt-5">
+      <Text className="text-2xl font-bold text-indigo-700 mb-4">Carrito de Compras</Text>
+      {cart.length === 0 ? (
+        <Text className="text-center text-gray-600 mt-10">Tu carrito está vacío.</Text>
+      ) : (
+        <FlatList
+          data={cart}
+          keyExtractor={(item) => item.idProducto.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+      {cart.length > 0 && (
+        <View className="absolute bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-200 flex-row justify-between items-center">
+          <Text className="text-lg font-bold text-gray-800">Total: S/ {getTotal().toFixed(2)}</Text>
+          <TouchableOpacity onPress={handleCheckout} className="bg-indigo-700 px-5 py-3 rounded-xl">
+            <Text className="text-white font-bold">Pagar</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );

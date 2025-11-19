@@ -7,7 +7,11 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 
+import { StripeProvider } from '@stripe/stripe-react-native';
+import { Provider as PaperProvider } from 'react-native-paper'; // <-- Import de Paper
 import 'react-native-reanimated';
+
+const STRIPE_PUBLISHABLE_KEY = "pk_live_YYYYYYYYYYYYYYYYYYYYYYYYY";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -26,17 +30,24 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <StoreProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="auth/login" />
-            <Stack.Screen name="auth/registro" />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </StoreProvider>
-    </AuthProvider>
+    <StripeProvider 
+      publishableKey={STRIPE_PUBLISHABLE_KEY}
+      merchantIdentifier="merchant.com.modastyle" 
+    >
+      <PaperProvider> {/* <-- Agregar PaperProvider */}
+        <AuthProvider>
+          <StoreProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="auth/login" />
+                <Stack.Screen name="auth/registro" />
+              </Stack>
+              <StatusBar style="auto" />
+            </ThemeProvider>
+          </StoreProvider>
+        </AuthProvider>
+      </PaperProvider>
+    </StripeProvider>
   );
 }

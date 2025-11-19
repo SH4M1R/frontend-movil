@@ -1,31 +1,24 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-
-// Dirección IP local de tu máquina para Expo/Android Emulator (NO 'localhost')
 const BASE_URL = 'http://10.0.2.2:8500';
-
-// --- Tipos existentes ---
 type User = {
-    idUsuario: number;
-    nombre: string;
-    correo: string;
-    direccion?: string;
-    telefono?: string;
-    token: string;
+    idUsuario: number;
+    nombre: string;
+    correo: string;
+    direccion?: string;
+    telefono?: string;
+    token: string;
 };
 
-// --- AuthContextType (Añadiendo nuevas funciones) ---
 type AuthContextType = {
-    user: User | null;
-    setUser: (user: User | null) => void;
-    login: (correo: string, contrasena: string) => Promise<boolean>;
-    register: (nombre: string, correo: string, contrasena: string) => Promise<boolean>;
-    logout: () => Promise<void>;
-    actualizarPerfil: (datos: Partial<User & { contrasena?: string }>) => Promise<User | null>;
-    
-    // --- NUEVAS FUNCIONES DE RECUPERACIÓN ---
-    requestPasswordReset: (correo: string) => Promise<boolean>;
-    resetPassword: (correo: string, codigo: string, nuevaContrasena: string) => Promise<boolean>;
+user: User | null;
+    setUser: (user: User | null) => void;
+    login: (correo: string, contrasena: string) => Promise<boolean>;
+    register: (nombre: string, correo: string, contrasena: string) => Promise<boolean>;
+    logout: () => Promise<void>;
+    actualizarPerfil: (datos: Partial<User & { contrasena?: string }>) => Promise<User | null>;
+    requestPasswordReset: (correo: string) => Promise<boolean>;
+    resetPassword: (correo: string, codigo: string, nuevaContrasena: string) => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -126,11 +119,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return null;
         }
     };
-
-
-    // --- MÉTODOS DE RECUPERACIÓN DE CONTRASEÑA ACTUALIZADOS ---
-
-    const requestPasswordReset = async (correo: string): Promise<boolean> => {
+    
+    const requestPasswordReset = async (correo: string): Promise<boolean> => {
         try {
             // RUTA ACTUALIZADA
             const res = await fetch(`${BASE_URL}/api/recuperacion/solicitar-codigo`, {
