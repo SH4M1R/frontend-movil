@@ -1,6 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { createUserWithEmailAndPassword, getAuth, sendEmailVerification } from "firebase/auth";
+const auth = getAuth();
+
 import React, { useState } from "react";
 import {
   Alert,
@@ -22,8 +25,50 @@ export default function RegisterScreen() {
   const [contrasena, setContrasena] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [loading, setLoading] = useState(false);
-
   const handleRegister = async () => {
+  if (!nombre || !correo || !direccion || !contrasena || !confirmar) {
+    Alert.alert("Error", "Completa todos los campos");
+    return;
+  }
+
+  if (contrasena !== confirmar) {
+    Alert.alert("Error", "Las contraseñas no coinciden");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    // Crear usuario en Firebase
+    const userCred = await createUserWithEmailAndPassword(auth, correo, contrasena);
+
+    // Enviar verificación al correo
+    await sendEmailVerification(userCred.user);
+
+    // Registrar también en tu backend (solo si Firebase fue exitoso)
+    const nuevoUsuario = { nombre, correo, direccion, contrasena };
+    await fetch("http://10.0.2.2:8500/api/usuarios/registro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(nuevoUsuario),
+    });
+
+    Alert.alert(
+      "Verifica tu correo",
+      "Te enviamos un enlace. Debes verificar antes de iniciar sesión."
+    );
+
+    // Mandamos al usuario a la pantalla verificar-email
+    router.replace("../auth/verificar-email");
+
+  } catch (error: any) {
+    console.error(error);
+    Alert.alert("Error", error.message || "Ocurrió un problema");
+  }
+
+  setLoading(false);
+};
+  /*const handleRegister = async () => {
     if (!nombre || !correo || !direccion || !contrasena || !confirmar) {
       Alert.alert("Error", "Por favor completa todos los campos");
       return;
@@ -63,7 +108,7 @@ export default function RegisterScreen() {
     }
 
     setLoading(false);
-  };
+  };*/
 
   return (
     <LinearGradient colors={["#667eea", "#764ba2"]} className="flex-1">
