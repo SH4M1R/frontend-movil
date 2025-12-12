@@ -11,6 +11,9 @@ export default function Footer() {
   const [active, setActive] = useState('');
   const { cart } = useStore();
 
+  // OCULTAR footer en la ruta de Delivery
+  if (pathname.includes('delivery')) return null;
+
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   useEffect(() => {
@@ -30,37 +33,30 @@ export default function Footer() {
 
   return (
     <SafeAreaView>
-    <View className="h-16 flex-row justify-around items-center border-t border-gray-300 bg-white">
-      {buttons.map((btn) => {
-        const isActive = active === btn.key;
-        const color = isActive ? '#4e2fb9' : '#6146c1';
+      <View className="h-16 flex-row justify-around items-center border-t border-gray-300 bg-white">
+        {buttons.map((btn) => {
+          const isActive = active === btn.key;
+          const color = isActive ? '#4e2fb9' : '#6146c1';
 
-        return (
-          <TouchableOpacity
-            key={btn.key}
-            className={`flex items-center justify-center px-2 py-1 rounded-xl ${
-              isActive ? 'bg-indigo-200' : ''
-            }`}
-            onPress={() => router.push(btn.route as any)}
-          >
-            <View className="relative">
-              <Ionicons name={btn.icon as any} size={24} color={color} />
-              {/* Contador solo para el botón del carrito */}
-              {btn.key === 'carrito' && cartCount > 0 && (
-                <View className="absolute -top-2 -right-3 bg-red-500 rounded-full w-4 h-4 items-center justify-center">
-                  <Text className="text-white text-[10px] font-bold">
-                    {cartCount}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <Text className="text-xs font-medium" style={{ color }}>
-              {btn.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+          return (
+            <TouchableOpacity
+              key={btn.key}
+              className={`flex items-center justify-center px-2 py-1 rounded-xl ${isActive ? 'bg-indigo-200' : ''}`}
+              onPress={() => router.push(btn.route as any)}
+            >
+              <View className="relative">
+                <Ionicons name={btn.icon as any} size={24} color={color} />
+                {btn.key === 'carrito' && cartCount > 0 && (
+                  <View className="absolute -top-2 -right-3 bg-red-500 rounded-full w-4 h-4 items-center justify-center">
+                    <Text className="text-white text-[10px] font-bold">{cartCount}</Text>
+                  </View>
+                )}
+              </View>
+              <Text className="text-xs font-medium" style={{ color }}>{btn.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </SafeAreaView>
   );
 }

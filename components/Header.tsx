@@ -1,11 +1,16 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import { usePathname } from 'expo-router';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Header() {
   const { user } = useAuth();
+  const pathname = usePathname();
+
+  // OCULTAR header en la ruta de Delivery
+  if (pathname.includes('delivery')) return null;
 
   return (
     <SafeAreaView>
