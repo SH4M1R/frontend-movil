@@ -28,9 +28,6 @@ interface LocalEvidence {
   estado?: string | null;
 }
 
-// =========================================================================
-// PedidoCard (SIN CAMBIOS)
-// =========================================================================
 const PedidoCard = ({
   pedido,
   onRequestFinalizar,
@@ -110,12 +107,10 @@ const PedidoCard = ({
   );
 };
 
-// =========================================================================
-// DeliveryScreen (MODIFICADO)
-// =========================================================================
 export default function DeliveryScreen() {
   const { user, logout } = useAuth();
-  const { setPedidosGlobal, setNotificaciones } = usePedidos();
+  // Eliminamos setNotificaciones de aquí, ya no se usa directamente
+  const { setPedidosGlobal } = usePedidos(); 
 
   const [pedidos, setPedidos] = useState<PedidoType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -131,7 +126,6 @@ export default function DeliveryScreen() {
 
   const [filter, setFilter] = useState<"TODOS" | "ACTIVOS" | "ENTREGADOS">("ACTIVOS");
 
-  // Variable para determinar si se puede finalizar (ENTREGADO/CANCELADO)
   const puedeFinalizar = fotoUri && descripcion.trim();
 
   useEffect(() => {
@@ -148,8 +142,9 @@ export default function DeliveryScreen() {
       const { data } = await axios.get<PedidoType[]>(`${API}/listar`);
       setPedidos(data || []);
       setPedidosGlobal(data || []);
-      const activos = data?.filter(p => p.estado !== "ENTREGADO" && p.estado !== "CANCELADO").length || 0;
-      setNotificaciones(activos);
+      
+      // *** LÍNEA CORREGIDA/ELIMINADA: setNotificaciones(activos); ***
+      
     } catch (error) {
       Alert.alert("Error", "No se pudieron cargar los pedidos.");
     } finally {
@@ -169,10 +164,8 @@ export default function DeliveryScreen() {
     return true;
   });
 
-  // LÓGICA MODIFICADA: Abrir modal solo si está EN_RUTA. Si está PENDIENTE, se cambia directo.
   const openModalForPedido = async (pedido: PedidoType) => {
     if (pedido.estado === "PENDIENTE") {
-      // Si está PENDIENTE, preguntar si quiere ponerlo EN_RUTA y ejecutar la acción de inmediato.
       Alert.alert(
         "Confirmar Recojo",
         `¿Confirmas que has recogido el pedido #${pedido.idVentaOnline} y lo pones EN RUTA?`,
@@ -185,7 +178,6 @@ export default function DeliveryScreen() {
     }
 
     if (pedido.estado === "EN_RUTA") {
-      // Si está EN_RUTA, abrir el modal de evidencia.
       setPedidoActual(pedido);
       try {
         const key = `deliveryData_${pedido.idVentaOnline}`;
@@ -206,7 +198,6 @@ export default function DeliveryScreen() {
       return;
     }
 
-    // Si está ENTREGADO/CANCELADO/etc., solo se cierra o muestra un mensaje.
     if (pedido.estado === "ENTREGADO" || pedido.estado === "CANCELADO") {
       Alert.alert("Pedido Finalizado", `El pedido #${pedido.idVentaOnline} ya se encuentra ${pedido.estado}.`);
     }
@@ -245,23 +236,20 @@ export default function DeliveryScreen() {
     } catch {}
   };
 
-  // Función de actualización ajustada
   const actualizarEstadoBackend = async (id: number, nuevoEstado: PedidoType["estado"], requiereEvidencia: boolean = true) => {
     setEvidenceLoading(true);
     try {
       await axios.put(`${API}/estado/${id}`, null, { params: { estado: nuevoEstado } });
       
-      // Solo guardar evidencia local si se requirió (ENTREGADO/CANCELADO)
       if (requiereEvidencia) {
         await saveLocalEvidence(id, fotoUri, descripcion, nuevoEstado);
       } else {
-        // Para EN_RUTA, se puede limpiar o simplemente no hacer nada con la evidencia.
         await saveLocalEvidence(id, null, null, nuevoEstado);
       }
 
       await fetchPedidos();
       Alert.alert("Éxito", `Pedido actualizado a "${nuevoEstado}".`);
-      closeModal(); // Cerrar el modal si estaba abierto
+      closeModal();
     } catch (error) {
        Alert.alert("Error", `No se pudo actualizar el pedido a "${nuevoEstado}".`);
     } finally {
@@ -272,7 +260,6 @@ export default function DeliveryScreen() {
   const confirmarAccion = async (nuevoEstado: PedidoType["estado"]) => {
     if (!pedidoActual) return;
     
-    // Validaciones solo para estados finales (ENTREGADO/CANCELADO)
     if (nuevoEstado !== "EN_RUTA") {
         if (!fotoUri) return Alert.alert("Falta foto", "Debes tomar/seleccionar una foto.");
         if (!descripcion.trim()) return Alert.alert("Falta descripción", "Ingresa una descripción.");
@@ -280,7 +267,6 @@ export default function DeliveryScreen() {
 
     Alert.alert("Confirmar", `¿Marcar como "${nuevoEstado}"?`, [
       { text: "Cancelar", style: "cancel" },
-      // Notar que ahora enviamos `true` para `requiereEvidencia`
       { text: "Sí", onPress: async () => await actualizarEstadoBackend(pedidoActual.idVentaOnline, nuevoEstado, true) },
     ]);
   };
@@ -294,7 +280,7 @@ export default function DeliveryScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
-      {/* NAVBAR y FILTROS (SIN CAMBIOS) */}
+      {/* NAVBAR */}
       <View className="bg-indigo-700 p-4 flex-row justify-between items-center shadow-lg shadow-black/20">
         <Text className="text-2xl font-extrabold text-white">Panel de Reparto</Text>
         <TouchableOpacity
@@ -311,6 +297,7 @@ export default function DeliveryScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* FILTROS */}
       <View className="flex-row items-center space-x-2 px-4 py-3 bg-white shadow">
         {["ACTIVOS", "ENTREGADOS", "TODOS"].map((f) => (
           <TouchableOpacity
@@ -323,7 +310,7 @@ export default function DeliveryScreen() {
         ))}
       </View>
 
-      {/* LISTA (SIN CAMBIOS) */}
+      {/* LISTA */}
       <ScrollView
         className="p-4"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchPedidos} colors={["#4f46e5"]} />}
@@ -348,11 +335,11 @@ export default function DeliveryScreen() {
         <View className="h-20" />
       </ScrollView>
 
-      {/* MODAL (AHORA SOLO PARA EVIDENCIA cuando el estado es EN_RUTA) */}
+      {/* MODAL */}
       <Modal
         animationType="fade"
         transparent={true}
-        visible={mostrarModal && pedidoActual?.estado === "EN_RUTA"} // Solo visible si está EN_RUTA
+        visible={mostrarModal && pedidoActual?.estado === "EN_RUTA"}
         onRequestClose={closeModal}
       >
         <View className="flex-1 justify-center items-center bg-black/70 p-4">

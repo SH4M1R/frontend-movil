@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { usePedidos } from '@/contexts/PedidoContext';
+import { usePedidos } from '@/contexts/PedidoContext'; // Asegúrate de que esta línea esté correcta
 import { Ionicons } from '@expo/vector-icons';
 import { router, usePathname } from 'expo-router';
 import React from 'react';
@@ -9,10 +9,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function Header() {
   const { user } = useAuth();
   const pathname = usePathname();
-  const { notificaciones } = usePedidos();
+  // notificaciones ahora es un array de NotificacionCliente[]
+  const { notificaciones } = usePedidos(); 
 
   // OCULTAR header en la ruta de Delivery
   if (pathname.includes('delivery')) return null;
+
+  // ... (El resto del código del Header es correcto)
 
   return (
     <SafeAreaView>
@@ -48,10 +51,12 @@ export default function Header() {
                   color="indigo"
                 />
 
+                {/* Esta es la parte que muestra la cantidad de notificaciones */}
                 {notificaciones.length > 0 && (
                   <View className="absolute -top-1 -right-1 bg-red-600 w-5 h-5 rounded-full items-center justify-center">
                     <Text className="text-white text-[10px] font-bold">
-                      {notificaciones.length}
+                      {/* Muestra la cantidad de notificaciones relevantes al cliente */}
+                      {notificaciones.length} 
                     </Text>
                   </View>
                 )}
