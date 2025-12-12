@@ -16,7 +16,7 @@ export default function MetodoPago() {
   const [isLoading, setIsLoading] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
-  const baseURL = "http://10.0.2.2:8500"; // Ajusta según tu plataforma
+  const baseURL = "http://10.248.48.237:8500"; // Ajusta según tu plataforma
 
   const total = getTotal();
 

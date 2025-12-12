@@ -8,10 +8,10 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 
 import { StripeProvider } from '@stripe/stripe-react-native';
-import { Provider as PaperProvider } from 'react-native-paper'; // <-- Import de Paper
+import { Provider as PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 
-const STRIPE_PUBLISHABLE_KEY = "pk_live_YYYYYYYYYYYYYYYYYYYYYYYYY";
+const STRIPE_PUBLISHABLE_KEY = "pk_test_51NczKhIflwBxpIOlJaEMgCS6nl1ObNGgWw7hJJjaMWN7D62yLP2Tktds4EsP0RJGHGnmJ9cdrd65vCOya0F0LAAP00wdH1suG8";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

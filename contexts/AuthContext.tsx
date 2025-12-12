@@ -9,7 +9,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase/firabaseConfig';
 
-const BASE_URL = 'http://10.0.2.2:8500';
+const BASE_URL = 'http://10.248.48.237:8500';
 
 // Estructura del usuario
 type User = {

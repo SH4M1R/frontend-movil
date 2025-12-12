@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Platform,
   RefreshControl,
   SafeAreaView,
@@ -27,6 +28,9 @@ interface LocalEvidence {
   estado?: string | null;
 }
 
+// =========================================================================
+// PedidoCard (SIN CAMBIOS)
+// =========================================================================
 const PedidoCard = ({
   pedido,
   onRequestFinalizar,
@@ -106,6 +110,9 @@ const PedidoCard = ({
   );
 };
 
+// =========================================================================
+// DeliveryScreen (MODIFICADO)
+// =========================================================================
 export default function DeliveryScreen() {
   const { user, logout } = useAuth();
   const { setPedidosGlobal, setNotificaciones } = usePedidos();
@@ -114,7 +121,7 @@ export default function DeliveryScreen() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const API = "http://10.0.2.2:8500/api/pago";
+  const API = "http://10.248.48.237:8500/api/pago";
 
   const [mostrarModal, setMostrarModal] = useState(false);
   const [pedidoActual, setPedidoActual] = useState<PedidoType | null>(null);
@@ -123,6 +130,9 @@ export default function DeliveryScreen() {
   const [evidenceLoading, setEvidenceLoading] = useState(false);
 
   const [filter, setFilter] = useState<"TODOS" | "ACTIVOS" | "ENTREGADOS">("ACTIVOS");
+
+  // Variable para determinar si se puede finalizar (ENTREGADO/CANCELADO)
+  const puedeFinalizar = fotoUri && descripcion.trim();
 
   useEffect(() => {
     if (user && user.rol !== "delivery") {
@@ -159,24 +169,47 @@ export default function DeliveryScreen() {
     return true;
   });
 
+  // LÓGICA MODIFICADA: Abrir modal solo si está EN_RUTA. Si está PENDIENTE, se cambia directo.
   const openModalForPedido = async (pedido: PedidoType) => {
-    setPedidoActual(pedido);
-    try {
-      const key = `deliveryData_${pedido.idVentaOnline}`;
-      const raw = await AsyncStorage.getItem(key);
-      if (raw) {
-        const parsed: LocalEvidence = JSON.parse(raw);
-        setFotoUri(parsed.fotoUri ?? null);
-        setDescripcion(parsed.descripcion ?? "");
-      } else {
+    if (pedido.estado === "PENDIENTE") {
+      // Si está PENDIENTE, preguntar si quiere ponerlo EN_RUTA y ejecutar la acción de inmediato.
+      Alert.alert(
+        "Confirmar Recojo",
+        `¿Confirmas que has recogido el pedido #${pedido.idVentaOnline} y lo pones EN RUTA?`,
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Sí", onPress: () => actualizarEstadoBackend(pedido.idVentaOnline, "EN_RUTA", false) },
+        ]
+      );
+      return;
+    }
+
+    if (pedido.estado === "EN_RUTA") {
+      // Si está EN_RUTA, abrir el modal de evidencia.
+      setPedidoActual(pedido);
+      try {
+        const key = `deliveryData_${pedido.idVentaOnline}`;
+        const raw = await AsyncStorage.getItem(key);
+        if (raw) {
+          const parsed: LocalEvidence = JSON.parse(raw);
+          setFotoUri(parsed.fotoUri ?? null);
+          setDescripcion(parsed.descripcion ?? "");
+        } else {
+          setFotoUri(null);
+          setDescripcion("");
+        }
+      } catch {
         setFotoUri(null);
         setDescripcion("");
       }
-    } catch {
-      setFotoUri(null);
-      setDescripcion("");
+      setMostrarModal(true);
+      return;
     }
-    setMostrarModal(true);
+
+    // Si está ENTREGADO/CANCELADO/etc., solo se cierra o muestra un mensaje.
+    if (pedido.estado === "ENTREGADO" || pedido.estado === "CANCELADO") {
+      Alert.alert("Pedido Finalizado", `El pedido #${pedido.idVentaOnline} ya se encuentra ${pedido.estado}.`);
+    }
   };
 
   const pickImageFromCamera = async () => {
@@ -188,7 +221,6 @@ export default function DeliveryScreen() {
           return;
         }
       }
-
       const result = await ImagePicker.launchCameraAsync({ quality: 0.6, base64: false });
       if (!result.canceled) setFotoUri(result.assets[0].uri);
     } catch {
@@ -213,17 +245,25 @@ export default function DeliveryScreen() {
     } catch {}
   };
 
-  const actualizarEstadoBackend = async (id: number, nuevoEstado: PedidoType["estado"]) => {
+  // Función de actualización ajustada
+  const actualizarEstadoBackend = async (id: number, nuevoEstado: PedidoType["estado"], requiereEvidencia: boolean = true) => {
     setEvidenceLoading(true);
     try {
       await axios.put(`${API}/estado/${id}`, null, { params: { estado: nuevoEstado } });
-      await saveLocalEvidence(id, fotoUri, descripcion, nuevoEstado);
+      
+      // Solo guardar evidencia local si se requirió (ENTREGADO/CANCELADO)
+      if (requiereEvidencia) {
+        await saveLocalEvidence(id, fotoUri, descripcion, nuevoEstado);
+      } else {
+        // Para EN_RUTA, se puede limpiar o simplemente no hacer nada con la evidencia.
+        await saveLocalEvidence(id, null, null, nuevoEstado);
+      }
+
       await fetchPedidos();
       Alert.alert("Éxito", `Pedido actualizado a "${nuevoEstado}".`);
-      setMostrarModal(false);
-      setPedidoActual(null);
-      setFotoUri(null);
-      setDescripcion("");
+      closeModal(); // Cerrar el modal si estaba abierto
+    } catch (error) {
+       Alert.alert("Error", `No se pudo actualizar el pedido a "${nuevoEstado}".`);
     } finally {
       setEvidenceLoading(false);
     }
@@ -231,37 +271,46 @@ export default function DeliveryScreen() {
 
   const confirmarAccion = async (nuevoEstado: PedidoType["estado"]) => {
     if (!pedidoActual) return;
-    if (!fotoUri) return Alert.alert("Falta foto", "Debes tomar/seleccionar una foto.");
-    if (!descripcion.trim()) return Alert.alert("Falta descripción", "Ingresa una descripción.");
+    
+    // Validaciones solo para estados finales (ENTREGADO/CANCELADO)
+    if (nuevoEstado !== "EN_RUTA") {
+        if (!fotoUri) return Alert.alert("Falta foto", "Debes tomar/seleccionar una foto.");
+        if (!descripcion.trim()) return Alert.alert("Falta descripción", "Ingresa una descripción.");
+    }
 
     Alert.alert("Confirmar", `¿Marcar como "${nuevoEstado}"?`, [
       { text: "Cancelar", style: "cancel" },
-      { text: "Sí", onPress: async () => await actualizarEstadoBackend(pedidoActual.idVentaOnline, nuevoEstado) },
+      // Notar que ahora enviamos `true` para `requiereEvidencia`
+      { text: "Sí", onPress: async () => await actualizarEstadoBackend(pedidoActual.idVentaOnline, nuevoEstado, true) },
     ]);
+  };
+
+  const closeModal = () => {
+    setMostrarModal(false);
+    setPedidoActual(null);
+    setFotoUri(null);
+    setDescripcion("");
   };
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
-      {/* NAVBAR */}
+      {/* NAVBAR y FILTROS (SIN CAMBIOS) */}
       <View className="bg-indigo-700 p-4 flex-row justify-between items-center shadow-lg shadow-black/20">
         <Text className="text-2xl font-extrabold text-white">Panel de Reparto</Text>
-        <View className="flex-row items-center space-x-1">
-          <TouchableOpacity
-            onPress={async () => {
-              await AsyncStorage.removeItem("token");
-              await AsyncStorage.removeItem("user");
-              logout();
-              router.replace("/auth/login");
-            }}
-            className="flex-row items-center px-3 py-1 rounded-md bg-red-600 shadow"
-          >
-            <Text className="text-white text-xs font-bold mr-1">Salir</Text>
-            <Ionicons name="log-out-outline" size={18} color="white" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={async () => {
+            await AsyncStorage.removeItem("token");
+            await AsyncStorage.removeItem("user");
+            logout();
+            router.replace("/auth/login");
+          }}
+          className="flex-row items-center px-3 py-1 rounded-md bg-red-600 shadow"
+        >
+          <Text className="text-white text-xs font-bold mr-1">Salir</Text>
+          <Ionicons name="log-out-outline" size={18} color="white" />
+        </TouchableOpacity>
       </View>
 
-      {/* FILTROS */}
       <View className="flex-row items-center space-x-2 px-4 py-3 bg-white shadow">
         {["ACTIVOS", "ENTREGADOS", "TODOS"].map((f) => (
           <TouchableOpacity
@@ -274,7 +323,7 @@ export default function DeliveryScreen() {
         ))}
       </View>
 
-      {/* LISTA */}
+      {/* LISTA (SIN CAMBIOS) */}
       <ScrollView
         className="p-4"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchPedidos} colors={["#4f46e5"]} />}
@@ -299,66 +348,97 @@ export default function DeliveryScreen() {
         <View className="h-20" />
       </ScrollView>
 
-      {/* MODAL */}
-      {mostrarModal && pedidoActual && (
-        <View className="absolute inset-0 bg-black/60 justify-center items-center px-6">
-          <View className="bg-white w-full max-w-md p-6 rounded-2xl shadow-lg">
-            <Text className="text-lg font-extrabold mb-2 text-gray-900">
-              Evidencia — Pedido #{pedidoActual.idVentaOnline}
-            </Text>
-            <Text className="text-sm text-gray-600 mb-3">
-              Estado actual: <Text className="font-bold">{pedidoActual.estado}</Text>
-            </Text>
+      {/* MODAL (AHORA SOLO PARA EVIDENCIA cuando el estado es EN_RUTA) */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={mostrarModal && pedidoActual?.estado === "EN_RUTA"} // Solo visible si está EN_RUTA
+        onRequestClose={closeModal}
+      >
+        <View className="flex-1 justify-center items-center bg-black/70 p-4">
+          <View className="bg-white w-full max-w-lg p-6 rounded-2xl shadow-2xl">
+            <ScrollView showsVerticalScrollIndicator={false}>
+                {/* TÍTULO Y ESTADO */}
+                <View className="border-b border-gray-100 pb-3 mb-4">
+                    <Text className="text-2xl font-extrabold text-gray-900">
+                      Evidencia de Entrega
+                    </Text>
+                    <Text className="text-lg font-bold mb-2 text-gray-900">
+                      Pedido #{pedidoActual?.idVentaOnline}
+                    </Text>
+                    <Text className="text-sm text-gray-600">
+                      Estado actual: <Text className="font-bold text-indigo-600">{pedidoActual?.estado}</Text>
+                    </Text>
+                </View>
 
-            <View className="flex-row space-x-2 mb-4">
-              <TouchableOpacity className="flex-1 bg-indigo-600 p-3 rounded-xl shadow" onPress={pickImageFromCamera}>
-                <Text className="text-white text-center font-bold">Cámara</Text>
-              </TouchableOpacity>
-              <TouchableOpacity className="flex-1 border border-indigo-600 p-3 rounded-xl" onPress={pickImageFromGallery}>
-                <Text className="text-indigo-600 text-center font-bold">Galería</Text>
-              </TouchableOpacity>
-            </View>
+                <Text className="text-base text-gray-700 font-semibold mb-3">Sube la foto de la entrega y añade una descripción.</Text>
 
-            {fotoUri ? (
-              <Image source={{ uri: fotoUri }} className="w-full h-56 rounded-xl mb-4" />
-            ) : (
-              <View className="py-8 items-center border border-gray-200 rounded-xl mb-4">
-                <Text className="text-gray-500">No hay foto aún</Text>
-              </View>
-            )}
+                {/* BOTONES CÁMARA/GALERÍA */}
+                <View className="flex-row space-x-3 mb-4">
+                    <TouchableOpacity 
+                        className="flex-1 bg-indigo-600 p-3 rounded-xl shadow-md shadow-indigo-300" 
+                        onPress={pickImageFromCamera}
+                    >
+                        <Text className="text-white text-center font-bold">Cámara</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        className="flex-1 border border-indigo-600 p-3 rounded-xl bg-indigo-50" 
+                        onPress={pickImageFromGallery}
+                    >
+                        <Text className="text-indigo-600 text-center font-bold">Galería</Text>
+                    </TouchableOpacity>
+                </View>
 
-            <TextInput
-              value={descripcion}
-              onChangeText={setDescripcion}
-              placeholder="Descripción"
-              multiline
-              className="border border-gray-300 rounded-xl p-3 min-h-[80px] mb-4 text-gray-700"
-            />
+                {/* VISUALIZADOR DE FOTO */}
+                {fotoUri ? (
+                    <Image 
+                        source={{ uri: fotoUri }} 
+                        className="w-full h-56 rounded-xl mb-4 border border-gray-300"
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <View className="py-8 items-center border-2 border-dashed border-gray-300 bg-gray-50 rounded-xl mb-4">
+                        <Ionicons name="camera-outline" size={30} color="#9ca3af" />
+                        <Text className="text-gray-500 mt-2">No hay foto aún</Text>
+                    </View>
+                )}
 
-            <View className="flex-row space-x-2">
-              <TouchableOpacity
-                disabled={evidenceLoading}
-                className={`flex-1 p-3 rounded-xl bg-green-600 ${!fotoUri || !descripcion.trim() ? "opacity-50" : ""}`}
-                onPress={() => confirmarAccion("ENTREGADO")}
-              >
-                {evidenceLoading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-center">Marcar ENTREGADO</Text>}
-              </TouchableOpacity>
+                {/* DESCRIPCIÓN */}
+                <TextInput
+                    value={descripcion}
+                    onChangeText={setDescripcion}
+                    placeholder="Descripción (requerida)"
+                    multiline
+                    className="border border-gray-300 rounded-xl p-3 min-h-[80px] mb-6 text-gray-700 bg-white"
+                />
 
-              <TouchableOpacity
-                disabled={evidenceLoading}
-                className={`flex-1 p-3 rounded-xl bg-red-600 ${!fotoUri || !descripcion.trim() ? "opacity-50" : ""}`}
-                onPress={() => confirmarAccion("CANCELADO")}
-              >
-                {evidenceLoading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-center">NO ENTREGADO</Text>}
-              </TouchableOpacity>
-            </View>
+                {/* BOTONES DE ACCIÓN (ENTREGADO / NO ENTREGADO) */}
+                <View className="flex-row space-x-3 mb-4">
+                    <TouchableOpacity
+                        disabled={evidenceLoading || !puedeFinalizar}
+                        className={`flex-1 p-3 rounded-xl ${puedeFinalizar && !evidenceLoading ? "bg-green-600 shadow-lg shadow-green-300/50" : "bg-gray-300 opacity-70"}`}
+                        onPress={() => confirmarAccion("ENTREGADO")}
+                    >
+                        {evidenceLoading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-center text-sm">Marcar ENTREGADO</Text>}
+                    </TouchableOpacity>
 
-            <TouchableOpacity className="mt-4 p-3 rounded-xl bg-gray-200" onPress={() => setMostrarModal(false)}>
-              <Text className="text-center font-bold text-gray-700">Cerrar</Text>
-            </TouchableOpacity>
+                    <TouchableOpacity
+                        disabled={evidenceLoading || !puedeFinalizar}
+                        className={`flex-1 p-3 rounded-xl ${puedeFinalizar && !evidenceLoading ? "bg-red-600 shadow-lg shadow-red-300/50" : "bg-gray-300 opacity-70"}`}
+                        onPress={() => confirmarAccion("CANCELADO")}
+                    >
+                        {evidenceLoading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-center text-sm">NO ENTREGADO</Text>}
+                    </TouchableOpacity>
+                </View>
+
+                {/* BOTÓN CERRAR */}
+                <TouchableOpacity className="mt-2 p-3 rounded-xl bg-gray-100 border border-gray-200" onPress={closeModal}>
+                    <Text className="text-center font-bold text-gray-700">Cerrar</Text>
+                </TouchableOpacity>
+            </ScrollView>
           </View>
         </View>
-      )}
+      </Modal>
     </SafeAreaView>
   );
 }

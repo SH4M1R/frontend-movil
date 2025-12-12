@@ -43,7 +43,7 @@ export const useStore = () => {
 };
 
 const getBaseURL = () =>
-  Platform.OS === "android" ? "http://10.0.2.2:8500" : "http://localhost:8500";
+  Platform.OS === "android" ? "http://10.248.48.237:8500" : "http://localhost:8500";
 
 export const StoreProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();

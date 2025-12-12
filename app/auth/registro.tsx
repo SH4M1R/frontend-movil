@@ -47,7 +47,7 @@ export default function RegisterScreen() {
 
     // Registrar también en tu backend (solo si Firebase fue exitoso)
     const nuevoUsuario = { nombre, correo, direccion, contrasena };
-    await fetch("http://10.0.2.2:8500/api/usuarios/registro", {
+    await fetch("http://10.248.48.237:8500/api/usuarios/registro", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(nuevoUsuario),

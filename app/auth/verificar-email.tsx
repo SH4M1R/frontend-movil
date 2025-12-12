@@ -42,7 +42,7 @@ export default function VerificarEmail() {
 
       if (user.emailVerified) {
         Alert.alert("Email verificado", "Ahora puedes iniciar sesión");
-        router.replace("/auth/login"); // 🔥 SIN CAMBIAR
+        router.replace("/auth/login");
       } else {
         Alert.alert("Aún no verificado", "Revisa el correo y prueba nuevamente.");
       }

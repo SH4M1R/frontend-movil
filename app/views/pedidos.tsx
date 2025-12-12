@@ -8,7 +8,7 @@ export default function PedidosScreen() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const API = "http://10.0.2.2:8500/api/pago"; // Ajusta según tu backend
+  const API = "http://10.248.48.237:8500/api/pago";
 
   const fetchPedidos = async () => {
     setLoading(true);
