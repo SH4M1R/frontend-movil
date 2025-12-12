@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { Pedido as PedidoType, usePedidos } from "@/contexts/PedidoContext";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -19,14 +20,6 @@ import {
   View,
 } from "react-native";
 
-interface Pedido {
-  idVentaOnline: number;
-  usuario: { nombre: string };
-  estado: "PENDIENTE" | "EN_RUTA" | "ENTREGADO" | "CANCELADO";
-  total: number;
-  fechaVenta: string;
-}
-
 interface LocalEvidence {
   fotoUri: string | null;
   descripcion: string | null;
@@ -34,19 +27,16 @@ interface LocalEvidence {
   estado?: string | null;
 }
 
-/* ------------------------------------------
-   CARD DE PEDIDO (Mejorado solo en diseño)
--------------------------------------------*/
 const PedidoCard = ({
   pedido,
   onRequestFinalizar,
 }: {
-  pedido: Pedido;
-  onRequestFinalizar: (pedido: Pedido) => void;
+  pedido: PedidoType;
+  onRequestFinalizar: (pedido: PedidoType) => void;
 }) => {
   let statusClass = "";
   let nextStatusText = "";
-  let nextStatusValue: Pedido["estado"] | null = null;
+  let nextStatusValue: PedidoType["estado"] | null = null;
 
   switch (pedido.estado) {
     case "PENDIENTE":
@@ -71,9 +61,7 @@ const PedidoCard = ({
   }
 
   return (
-    <View
-      className={`rounded-2xl p-5 mb-4 border ${statusClass} shadow-md shadow-black/10`}
-    >
+    <View className={`rounded-2xl p-5 mb-4 border ${statusClass} shadow-md shadow-black/10`}>
       <View className="flex-row justify-between items-center mb-3">
         <Text className="text-xl font-extrabold text-gray-900">
           Orden #{pedido.idVentaOnline}
@@ -88,16 +76,13 @@ const PedidoCard = ({
       </Text>
 
       <Text className="text-gray-700 text-sm mb-4">
-        <Text className="font-semibold">Fecha:</Text>{" "}
-        {new Date(pedido.fechaVenta).toLocaleString()}
+        <Text className="font-semibold">Fecha:</Text> {new Date(pedido.fechaVenta).toLocaleString()}
       </Text>
 
       <View className="flex-row justify-between items-center pt-4 border-t border-gray-200">
         <View>
           <Text className="text-xs text-gray-500">Estado actual</Text>
-          <Text className="text-base font-bold text-indigo-700">
-            {pedido.estado}
-          </Text>
+          <Text className="text-base font-bold text-indigo-700">{pedido.estado}</Text>
         </View>
 
         {nextStatusValue ? (
@@ -106,9 +91,7 @@ const PedidoCard = ({
             onPress={() => onRequestFinalizar(pedido)}
             disabled={pedido.estado === "ENTREGADO"}
           >
-            <Text className="text-white text-sm font-bold">
-              {nextStatusText}
-            </Text>
+            <Text className="text-white text-sm font-bold">{nextStatusText}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -125,21 +108,21 @@ const PedidoCard = ({
 
 export default function DeliveryScreen() {
   const { user, logout } = useAuth();
-  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const { setPedidosGlobal, setNotificaciones } = usePedidos();
+
+  const [pedidos, setPedidos] = useState<PedidoType[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const API = "http://10.0.2.2:8500/api/pago";
 
   const [mostrarModal, setMostrarModal] = useState(false);
-  const [pedidoActual, setPedidoActual] = useState<Pedido | null>(null);
+  const [pedidoActual, setPedidoActual] = useState<PedidoType | null>(null);
   const [fotoUri, setFotoUri] = useState<string | null>(null);
   const [descripcion, setDescripcion] = useState("");
   const [evidenceLoading, setEvidenceLoading] = useState(false);
 
-  const [filter, setFilter] = useState<"TODOS" | "ACTIVOS" | "ENTREGADOS">(
-    "ACTIVOS"
-  );
+  const [filter, setFilter] = useState<"TODOS" | "ACTIVOS" | "ENTREGADOS">("ACTIVOS");
 
   useEffect(() => {
     if (user && user.rol !== "delivery") {
@@ -152,8 +135,11 @@ export default function DeliveryScreen() {
     setLoading(true);
     setRefreshing(true);
     try {
-      const { data } = await axios.get<Pedido[]>(`${API}/listar`);
+      const { data } = await axios.get<PedidoType[]>(`${API}/listar`);
       setPedidos(data || []);
+      setPedidosGlobal(data || []);
+      const activos = data?.filter(p => p.estado !== "ENTREGADO" && p.estado !== "CANCELADO").length || 0;
+      setNotificaciones(activos);
     } catch (error) {
       Alert.alert("Error", "No se pudieron cargar los pedidos.");
     } finally {
@@ -166,26 +152,14 @@ export default function DeliveryScreen() {
     fetchPedidos();
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await AsyncStorage.removeItem("token");
-      await AsyncStorage.removeItem("user");
-      logout(); 
-      router.replace("/auth/login");
-    } catch (error) {
-      console.log("Error al cerrar sesión:", error);
-    }
-  };
-
   const pedidosFiltrados = pedidos.filter((p) => {
     if (filter === "TODOS") return true;
-    if (filter === "ACTIVOS")
-      return p.estado !== "ENTREGADO" && p.estado !== "CANCELADO";
+    if (filter === "ACTIVOS") return p.estado !== "ENTREGADO" && p.estado !== "CANCELADO";
     if (filter === "ENTREGADOS") return p.estado === "ENTREGADO";
     return true;
   });
 
-  const openModalForPedido = async (pedido: Pedido) => {
+  const openModalForPedido = async (pedido: PedidoType) => {
     setPedidoActual(pedido);
     try {
       const key = `deliveryData_${pedido.idVentaOnline}`;
@@ -215,14 +189,8 @@ export default function DeliveryScreen() {
         }
       }
 
-      const result = await ImagePicker.launchCameraAsync({
-        quality: 0.6,
-        base64: false,
-      });
-
-      if (!result.canceled) {
-        setFotoUri(result.assets[0].uri);
-      }
+      const result = await ImagePicker.launchCameraAsync({ quality: 0.6, base64: false });
+      if (!result.canceled) setFotoUri(result.assets[0].uri);
     } catch {
       Alert.alert("Error", "No se pudo abrir la cámara.");
     }
@@ -230,47 +198,27 @@ export default function DeliveryScreen() {
 
   const pickImageFromGallery = async () => {
     try {
-      const res = await ImagePicker.launchImageLibraryAsync({
-        quality: 0.6,
-        base64: false,
-      });
+      const res = await ImagePicker.launchImageLibraryAsync({ quality: 0.6, base64: false });
       if (!res.canceled) setFotoUri(res.assets[0].uri);
     } catch {
       Alert.alert("Error", "No se pudo abrir la galería.");
     }
   };
 
-  const saveLocalEvidence = async (
-    id: number,
-    foto: string | null,
-    desc: string | null,
-    estado: string | null
-  ) => {
+  const saveLocalEvidence = async (id: number, foto: string | null, desc: string | null, estado: string | null) => {
     try {
       const key = `deliveryData_${id}`;
-      const payload: LocalEvidence = {
-        fotoUri: foto,
-        descripcion: desc,
-        fechaGuardado: new Date().toISOString(),
-        estado,
-      };
+      const payload: LocalEvidence = { fotoUri: foto, descripcion: desc, fechaGuardado: new Date().toISOString(), estado };
       await AsyncStorage.setItem(key, JSON.stringify(payload));
     } catch {}
   };
 
-  const actualizarEstadoBackend = async (
-    id: number,
-    nuevoEstado: Pedido["estado"]
-  ) => {
+  const actualizarEstadoBackend = async (id: number, nuevoEstado: PedidoType["estado"]) => {
     setEvidenceLoading(true);
     try {
-      await axios.put(`${API}/estado/${id}`, null, {
-        params: { estado: nuevoEstado },
-      });
-
+      await axios.put(`${API}/estado/${id}`, null, { params: { estado: nuevoEstado } });
       await saveLocalEvidence(id, fotoUri, descripcion, nuevoEstado);
       await fetchPedidos();
-
       Alert.alert("Éxito", `Pedido actualizado a "${nuevoEstado}".`);
       setMostrarModal(false);
       setPedidoActual(null);
@@ -281,42 +229,27 @@ export default function DeliveryScreen() {
     }
   };
 
-  const confirmarAccion = async (nuevoEstado: Pedido["estado"]) => {
+  const confirmarAccion = async (nuevoEstado: PedidoType["estado"]) => {
     if (!pedidoActual) return;
-    if (!fotoUri)
-      return Alert.alert("Falta foto", "Debes tomar/seleccionar una foto.");
-    if (!descripcion.trim())
-      return Alert.alert("Falta descripción", "Ingresa una descripción.");
+    if (!fotoUri) return Alert.alert("Falta foto", "Debes tomar/seleccionar una foto.");
+    if (!descripcion.trim()) return Alert.alert("Falta descripción", "Ingresa una descripción.");
 
-    Alert.alert(
-      "Confirmar",
-      `¿Marcar como "${nuevoEstado}"?`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Sí",
-          onPress: async () =>
-            await actualizarEstadoBackend(
-              pedidoActual.idVentaOnline,
-              nuevoEstado
-            ),
-        },
-      ]
-    );
+    Alert.alert("Confirmar", `¿Marcar como "${nuevoEstado}"?`, [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Sí", onPress: async () => await actualizarEstadoBackend(pedidoActual.idVentaOnline, nuevoEstado) },
+    ]);
   };
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
       {/* NAVBAR */}
       <View className="bg-indigo-700 p-4 flex-row justify-between items-center shadow-lg shadow-black/20">
-        <Text className="text-2xl font-extrabold text-white">
-          Panel de Reparto
-        </Text>
-
+        <Text className="text-2xl font-extrabold text-white">Panel de Reparto</Text>
         <View className="flex-row items-center space-x-1">
-          {/* Logout */}
           <TouchableOpacity
-            onPress={() => {
+            onPress={async () => {
+              await AsyncStorage.removeItem("token");
+              await AsyncStorage.removeItem("user");
               logout();
               router.replace("/auth/login");
             }}
@@ -327,65 +260,40 @@ export default function DeliveryScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* FILTROS */}
       <View className="flex-row items-center space-x-2 px-4 py-3 bg-white shadow">
-      {["ACTIVOS", "ENTREGADOS", "TODOS"].map((f) => (
-            <TouchableOpacity
-              key={f}
-              onPress={() => setFilter(f as any)}
-              className={`px-3 py-1 rounded-md ${
-                filter === f
-                  ? "bg-indigo-500"
-                  : "bg-white border border-indigo-200"
-              }`}
-            >
-              <Text
-                className={`text-xs font-bold ${
-                  filter === f ? "text-white" : "text-indigo-700"
-                }`}
-              >
-                {f}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        {["ACTIVOS", "ENTREGADOS", "TODOS"].map((f) => (
+          <TouchableOpacity
+            key={f}
+            onPress={() => setFilter(f as any)}
+            className={`px-3 py-1 rounded-md ${filter === f ? "bg-indigo-500" : "bg-white border border-indigo-200"}`}
+          >
+            <Text className={`text-xs font-bold ${filter === f ? "text-white" : "text-indigo-700"}`}>{f}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
+
       {/* LISTA */}
       <ScrollView
         className="p-4"
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={fetchPedidos}
-            colors={["#4f46e5"]}
-          />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchPedidos} colors={["#4f46e5"]} />}
       >
         <Text className="text-xl font-extrabold text-gray-800 mb-4 mt-2">
           Pedidos ({pedidosFiltrados.length})
         </Text>
 
-        {loading && (
-          <ActivityIndicator size="small" color="#4f46e5" className="my-3" />
-        )}
+        {loading && <ActivityIndicator size="small" color="#4f46e5" className="my-3" />}
 
         {pedidosFiltrados.length === 0 && !loading && (
           <View className="bg-white p-6 rounded-xl border border-indigo-200 items-center mt-10">
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={55}
-              color="#4f46e5"
-            />
-            <Text className="mt-4 text-gray-600 text-base font-semibold">
-              No hay pedidos.
-            </Text>
+            <Ionicons name="checkmark-circle-outline" size={55} color="#4f46e5" />
+            <Text className="mt-4 text-gray-600 text-base font-semibold">No hay pedidos.</Text>
           </View>
         )}
 
         {pedidosFiltrados.map((pedido) => (
-          <PedidoCard
-            key={pedido.idVentaOnline}
-            pedido={pedido}
-            onRequestFinalizar={openModalForPedido}
-          />
+          <PedidoCard key={pedido.idVentaOnline} pedido={pedido} onRequestFinalizar={openModalForPedido} />
         ))}
 
         <View className="h-20" />
@@ -398,37 +306,21 @@ export default function DeliveryScreen() {
             <Text className="text-lg font-extrabold mb-2 text-gray-900">
               Evidencia — Pedido #{pedidoActual.idVentaOnline}
             </Text>
-
             <Text className="text-sm text-gray-600 mb-3">
-              Estado actual:{" "}
-              <Text className="font-bold">{pedidoActual.estado}</Text>
+              Estado actual: <Text className="font-bold">{pedidoActual.estado}</Text>
             </Text>
 
-            {/* botones foto */}
             <View className="flex-row space-x-2 mb-4">
-              <TouchableOpacity
-                className="flex-1 bg-indigo-600 p-3 rounded-xl shadow"
-                onPress={pickImageFromCamera}
-              >
-                <Text className="text-white text-center font-bold">
-                  Cámara
-                </Text>
+              <TouchableOpacity className="flex-1 bg-indigo-600 p-3 rounded-xl shadow" onPress={pickImageFromCamera}>
+                <Text className="text-white text-center font-bold">Cámara</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                className="flex-1 border border-indigo-600 p-3 rounded-xl"
-                onPress={pickImageFromGallery}
-              >
-                <Text className="text-indigo-600 text-center font-bold">
-                  Galería
-                </Text>
+              <TouchableOpacity className="flex-1 border border-indigo-600 p-3 rounded-xl" onPress={pickImageFromGallery}>
+                <Text className="text-indigo-600 text-center font-bold">Galería</Text>
               </TouchableOpacity>
             </View>
 
             {fotoUri ? (
-              <Image
-                source={{ uri: fotoUri }}
-                className="w-full h-56 rounded-xl mb-4"
-              />
+              <Image source={{ uri: fotoUri }} className="w-full h-56 rounded-xl mb-4" />
             ) : (
               <View className="py-8 items-center border border-gray-200 rounded-xl mb-4">
                 <Text className="text-gray-500">No hay foto aún</Text>
@@ -446,44 +338,23 @@ export default function DeliveryScreen() {
             <View className="flex-row space-x-2">
               <TouchableOpacity
                 disabled={evidenceLoading}
-                className={`flex-1 p-3 rounded-xl bg-green-600 ${
-                  !fotoUri || !descripcion.trim() ? "opacity-50" : ""
-                }`}
+                className={`flex-1 p-3 rounded-xl bg-green-600 ${!fotoUri || !descripcion.trim() ? "opacity-50" : ""}`}
                 onPress={() => confirmarAccion("ENTREGADO")}
               >
-                {evidenceLoading ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="text-white font-bold text-center">
-                    Marcar ENTREGADO
-                  </Text>
-                )}
+                {evidenceLoading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-center">Marcar ENTREGADO</Text>}
               </TouchableOpacity>
 
               <TouchableOpacity
                 disabled={evidenceLoading}
-                className={`flex-1 p-3 rounded-xl bg-red-600 ${
-                  !fotoUri || !descripcion.trim() ? "opacity-50" : ""
-                }`}
+                className={`flex-1 p-3 rounded-xl bg-red-600 ${!fotoUri || !descripcion.trim() ? "opacity-50" : ""}`}
                 onPress={() => confirmarAccion("CANCELADO")}
               >
-                {evidenceLoading ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="text-white font-bold text-center">
-                    NO ENTREGADO
-                  </Text>
-                )}
+                {evidenceLoading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-center">NO ENTREGADO</Text>}
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              className="mt-4 p-3 rounded-xl bg-gray-200"
-              onPress={() => setMostrarModal(false)}
-            >
-              <Text className="text-center font-bold text-gray-700">
-                Cerrar
-              </Text>
+            <TouchableOpacity className="mt-4 p-3 rounded-xl bg-gray-200" onPress={() => setMostrarModal(false)}>
+              <Text className="text-center font-bold text-gray-700">Cerrar</Text>
             </TouchableOpacity>
           </View>
         </View>
